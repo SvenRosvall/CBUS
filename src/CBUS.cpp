@@ -928,7 +928,7 @@ void CBUS::process(void) {
         if (bModeChanging) {
           _msg.len = 8;
           _msg.data[0] = OPC_NAME;
-          memcpy(_msg.data + 1, _mname, 7);
+          strncpy(_msg.data + 1, _mname, 7);
           sendMessage(&_msg);
         }
 
