@@ -486,7 +486,7 @@ void CBUSbase::process_single_message(CANFrame *msg) {
   /// doesn't apply to RTR or zero-length frames, so as not to trigger an enumeration loop
   //
 
-  if (remoteCANID == module_config->CANID && nn != module_config->nodeNum) {
+  if (msg->len > 0 && remoteCANID == module_config->CANID && nn != module_config->nodeNum) {
     // DEBUG_SERIAL << F("> CAN id clash, enumeration required") << endl;
     enumeration_required = true;
   }
@@ -980,13 +980,13 @@ void CBUSbase::process_single_message(CANFrame *msg) {
           // don't repeat this for subsequent EVs
           if (evindex < 2) {
             module_config->writeEvent(index, &msg->data[1]);
+
+            // recreate event hash table entry
+            // DEBUG_SERIAL << F("> updating hash table entry for idx = ") << index << endl;
+            module_config->updateEvHashEntry(index);
           }
 
           module_config->writeEventEV(index, evindex, evval);
-
-          // recreate event hash table entry
-          // DEBUG_SERIAL << F("> updating hash table entry for idx = ") << index << endl;
-          module_config->updateEvHashEntry(index);
 
           // respond with WRACK
           sendWRACK();
