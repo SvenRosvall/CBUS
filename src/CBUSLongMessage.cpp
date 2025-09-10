@@ -330,7 +330,7 @@ bool CBUSLongMessage::is_sending(void) {
 bool CBUSLongMessage::sendMessageFragment(CANFrame *frame, const byte priority) {
 
 	bool ret;
-	char buffer[64], t[8];
+	// char buffer[64], t[8];
 
 	// these are common to all messages
 	frame->len = 8;
@@ -338,13 +338,13 @@ bool CBUSLongMessage::sendMessageFragment(CANFrame *frame, const byte priority) 
 
 	ret = (_cbus_object_ptr->sendMessage(frame, false, false, priority));
 
-	sprintf(buffer, "[%lu] [%u] [ ", frame->id, frame->len);
-	for (byte i = 0; i < frame->len; i++) {
-		sprintf(t, "%02x ", frame->data[i]);
-		strcat(buffer, t);
-	}
-	sprintf(t, "]");
-	strcat(buffer, t);
+	// sprintf(buffer, "[%lu] [%u] [ ", frame->id, frame->len);
+	// for (byte i = 0; i < frame->len; i++) {
+	// 	sprintf(t, "%02x ", frame->data[i]);
+	// 	strcat(buffer, t);
+	// }
+	// sprintf(t, "]");
+	// strcat(buffer, t);
 
 	// VLOG(buffer);
 
