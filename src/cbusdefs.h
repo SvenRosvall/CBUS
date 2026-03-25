@@ -8,43 +8,43 @@
 extern "C" {
 #endif
 
-// 		
+//
 // 		Copyright (C) Pete Brownlow 2011-2022   software@upsys.co.uk
 // 		Originally derived from opcodes.h (c) Andrew Crosland.
 // 		CSV version by Ian Hogg inspired by David W Radcliffe
-// 		
-// 		Ver 8w 
-// 		
+//
+// 		Ver 8y
+//
 // 		  This work is licensed under the:
 // 		      Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
 // 		  To view a copy of this license, visit:
 // 		      http://creativecommons.org/licenses/by-nc-sa/4.0/
 // 		  or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
-// 		
+//
 // 		  License summary:
 // 		    You are free to:
 // 		      Share, copy and redistribute the material in any medium or format
 // 		      Adapt, remix, transform, and build upon the material
-// 		
+//
 // 		    The licensor cannot revoke these freedoms as long as you follow the license terms.
-// 		
+//
 // 		    Attribution : You must give appropriate credit, provide a link to the license,
 // 		                   and indicate if changes were made. You may do so in any reasonable manner,
 // 		                   but not in any way that suggests the licensor endorses you or your use.
-// 		
+//
 // 		    NonCommercial : You may not use the material for commercial purposes. **(see note below)
-// 		
+//
 // 		    ShareAlike : If you remix, transform, or build upon the material, you must distribute
 // 		                  your contributions under the same license as the original.
-// 		
+//
 // 		    No additional restrictions : You may not apply legal terms or technological measures that
 // 		                                  legally restrict others from doing anything the license permits.
-// 		
+//
 // 		   ** For commercial use, please contact the original copyright holder(s) to agree licensing terms
-// 		
+//
 // 		    This software is distributed in the hope that it will be useful, but WITHOUT ANY
 // 		    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE
-// 		
+//
 // 		Version history:
 // 		Pete Brownlow,6/4/11,Original from spec version 7e
 // 		Roger Healey,6/4/11,Add OPC_CMDERR response codes
@@ -103,26 +103,27 @@ extern "C" {
 // 		Ian Hogg,14/08/2023, Ver 8x  Add manufacturer code for VLCB. This is a way to allocate a block of module Id to VLCB even though VLCB group is not a manufacturer per se. The VLCB module IDs will be defined in the VLCB repo
 // 		Pete Brownlow,2/11/23, Ver 8x  Add module id for CANLEVER (Tim Coombs)
 // 		Pete Brownlow,3/11/23, Ver 8x  Update SPROG module type ids (Andrew Crosland)
-// 
+// 		Pete Brownlow, 23/11/23, Ver 8y  Add CANSHIELD, CAN4IN4OUT, CANDEV
+// 		Ian Hogg, 10/3/25, Remove the VLCB manufacturer code as this is no longer required. Add CANARGB.
+//
 // CBUS Manufacturer definitions
 // Where the manufacturer already has an NMRA code, this is used
-// 
+//
 #define MANU_DEV	13	// For new manufacturer development - who don't have a manufacturer id yet
 #define MANU_MERG	165	// https://www.merg.co.uk
 #define MANU_SPROG	44	// https://www.sprog-dcc.co.uk/
 #define MANU_ROCRAIL	70	// http://www.rocrail.net
 #define MANU_SPECTRUM	80	// http://animatedmodeler.com  (Spectrum Engineering)
-#define MANU_VLCB	250	// VLCB range of modules
 #define MANU_SYSPIXIE	249	// Konrad Orlowski
 #define MANU_RME	248	// http://rmeuk.com  (Railway Modelling Experts Limited)
-// 
-// 
+//
+//
 // MODULE TYPES
-// 
+//
 // Please note that the existence of a module type id does not necessarily mean that firmware has been implemented
-// 
+//
 // MERG Module types
-// 
+//
 #define MTYP_SLIM	0	// default for SLiM nodes
 #define MTYP_CANACC4	1	// Solenoid point driver
 #define MTYP_CANACC5	2	// Motorised point driver
@@ -204,19 +205,29 @@ extern "C" {
 #define MTYP_CANSBIP	78	// Q series PIC input module (Ian Hart)
 #define MTYP_CANBUFFER	79	// Message buffer (Phil Silver)
 #define MTYP_CANLEVER	80	// Lever frame module (Tim Coombs)
-// 
-// 
-// 
+#define MTYP_CANSHIELD	81	// Kit 110 Arduino shield test firmware
+#define MTYP_CAN4IN4OUT	82	// 4 inputs 4 outputs (Arduino module)
+#define MTYP_CANCMDB	83	// CANCMD with built in booster (Simon West)
+#define MTYP_CANPIXEL	84	// neopixel driver (Jon Denham)
+#define MTYP_CANCABPE	85	// Cab2 with pot or encoder (Simon West hardware, Jon Denham new C firmware)
+#define MTYP_CANSMARTTD	86	// Smart train detector (Michael Smith)
+#define MTYP_CANARGB	87	// Addressable LEDs (Ian Hogg)
+#define MTYP_VLCB	0xFC	// All VLCB modules have the same ID
+//
+//
+//
+//
 // At the time of writing the list of defined MERG module types is maintained by Pete Brownlow software@upsys.co.uk
-// Please liaise with Pete before adding new module types, 
+// Please liaise with Pete before adding new module types,
 // and/or create your own GitHub branch, add your proposed new module type(s) and then create a Pull Request
-// 
+//
 #define MTYP_CAN_SW	0xFF	// Software nodes
 #define MTYP_EMPTY	0xFE	// Empty module, bootloader only
 #define MTYP_CANUSB	0xFD	// USB interface
-// 
+#define MTYP_CANDEV	0xFC	// Module type for use by developers when developing something new
+//
 // Sprog Module types
-// 
+//
 #define MTYP_CANPiSPRG3	1	// Pi-SPROG 3 programmer/command station
 #define MTYP_CANSPROG3P	2	// SPROG 3 Plus programmer/command station
 #define MTYP_CANSPROG	3	// CAN SPROG programmer/command station
@@ -226,10 +237,10 @@ extern "C" {
 #define MTYP_CANSERVOIO	50	// 8-channel Servo I/O module
 #define MTYP_CANISB	100	// CAN ISB Isolated CAN USB Interface
 #define MTYP_CANSOLIO 	101	// 8-channel (4-pairs) Solenoid I/O module
-// 
-// 
+//
+//
 // Rocrail Module types
-// 
+//
 #define MTYP_CANGC1	1	// RS232 PC interface
 #define MTYP_CANGC2	2	// 16 I/O
 #define MTYP_CANGC3	3	// Command station (derived from cancmd)
@@ -238,23 +249,23 @@ extern "C" {
 #define MTYP_CANGC6	6	// 4 channel servo controller
 #define MTYP_CANGC7	7	// Fast clock module
 #define MTYP_CANGC1e	11	// CAN<->Ethernet interface
-// 
+//
 // Spectrum Engineering Animated Modeller module types
-// 
+//
 #define MTYP_AMCTRLR	1	// Animation controller (firmware derived from cancmd)
 #define MTYP_DUALCAB	2	// Dual cab based on cancab
-// 
-// 
+//
+//
 // SysPixie Module types (Konrad Orlowski)
-// 
+//
 #define MTYP_CANPMSense	1	// Motorised point motor driver with current sense
-// 
-// 
-// 
+//
+//
+//
 // CBUS opcodes list
-// 
+//
 // Packets with no data bytes
-// 
+//
 #define OPC_ACK	0x00	// General ack
 #define OPC_NAK	0x01	// General nak
 #define OPC_HLT	0x02	// Bus Halt
@@ -268,26 +279,26 @@ extern "C" {
 #define OPC_RESTP	0x0a	// Request emergency stop all
 #define OPC_RSTAT	0x0c	// Request node status
 #define OPC_QNN	0x0d	// Query nodes
-// 
+//
 #define OPC_RQNP	0x10	// Read node parameters
 #define OPC_RQMN	0x11	// Request name of module type
-// 
+//
 // Packets with 1 data byte
-// 
+//
 #define OPC_KLOC	0x21	// Release engine by handle
 #define OPC_QLOC	0x22	// Query engine by handle
 #define OPC_DKEEP	0x23	// Keep alive for cab
-// 
+//
 #define OPC_DBG1	0x30	// Debug message with 1 status byte
 #define OPC_EXTC	0x3F	// Extended opcode
-// 
+//
 // Packets with 2 data bytes
-// 
+//
 #define OPC_RLOC	0x40	// Request session for loco
 #define OPC_QCON	0x41	// Query consist
 #define OPC_SNN	0x42	// Set node number
 #define OPC_ALOC	0X43	// Allocate loco (used to allocate to a shuttle in cancmd)
-// 
+//
 #define OPC_STMOD	0x44	// Set Throttle mode
 #define OPC_PCON	0x45	// Consist loco
 #define OPC_KCON	0x46	// De-consist loco
@@ -297,7 +308,7 @@ extern "C" {
 #define OPC_DFNOF	0x4A	// Loco function off
 #define OPC_SSTAT	0x4C	// Service mode status
 #define OPC_NNRSM	0x4F	// Reset to manufacturer's defaults
-// 
+//
 #define OPC_RQNN	0x50	// Request Node number in setup mode
 #define OPC_NNREL	0x51	// Node number release
 #define OPC_NNACK	0x52	// Node number acknowledge
@@ -314,14 +325,14 @@ extern "C" {
 #define OPC_ENUM	0x5D	// Force can_id self enumeration
 #define OPC_NNRST	0x5E	// Reset node (as in restart)
 #define OPC_EXTC1	0x5F	// Extended opcode with 1 data byte
-// 
+//
 // Packets with 3 data bytes
-// 
+//
 #define OPC_DFUN	0x60	// Set engine functions
 #define OPC_GLOC	0x61	// Get loco (with support for steal/share)
 #define OPC_ERR	0x63	// Command station error
 #define OPC_CMDERR	0x6F	// Errors from nodes during config
-// 
+//
 #define OPC_EVNLF	0x70	// Event slots left response
 #define OPC_NVRD	0x71	// Request read of node variable
 #define OPC_NENRD	0x72	// Request read stored event by index
@@ -329,15 +340,15 @@ extern "C" {
 #define OPC_NUMEV	0x74	// Number of events stored response
 #define OPC_CANID	0x75	// Set canid
 #define OPC_EXTC2	0x7F	// Extended opcode with 2 data bytes
-// 
+//
 // Packets with 4 data bytes
-// 
+//
 #define OPC_RDCC3	0x80	// 3 byte DCC packet
 #define OPC_WCVO	0x82	// Write CV byte Ops mode by handle
 #define OPC_WCVB	0x83	// Write CV bit Ops mode by handle
 #define OPC_QCVS	0x84	// Read CV
 #define OPC_PCVS	0x85	// Report CV
-// 
+//
 #define OPC_ACON	0x90	// on event
 #define OPC_ACOF	0x91	// off event
 #define OPC_AREQ	0x92	// Accessory Request event
@@ -354,12 +365,12 @@ extern "C" {
 #define OPC_ARSON	0x9D	// Accessory short response on event
 #define OPC_ARSOF	0x9E	// Accessory short response off event
 #define OPC_EXTC3	0x9F	// Extended opcode with 3 data bytes
-// 
+//
 // Packets with 5 data bytes
-// 
+//
 #define OPC_RDCC4	0xA0	// 4 byte DCC packet
 #define OPC_WCVS	0xA2	// Write CV service mode
-// 
+//
 #define OPC_ACON1	0xB0	// On event with one data byte
 #define OPC_ACOF1	0xB1	// Off event with one data byte
 #define OPC_REQEV	0xB2	// Read event variable in learn mode
@@ -372,14 +383,14 @@ extern "C" {
 #define OPC_ARSON1	0xBD	// Short response event on with one data byte
 #define OPC_ARSOF1	0xBE	// Short response event off with one data byte
 #define OPC_EXTC4	0xBF	// Extended opcode with 4 data bytes
-// 
+//
 // Packets with 6 data bytes
-// 
+//
 #define OPC_RDCC5	0xC0	// 5 byte DCC packet
 #define OPC_WCVOA	0xC1	// Write CV ops mode by address
 #define OPC_CABDAT	0xC2	// Cab data (cab signalling)
 #define OPC_FCLK	0xCF	// Fast clock
-// 
+//
 #define OPC_ACON2	0xD0	// On event with two data bytes
 #define OPC_ACOF2	0xD1	// Off event with two data bytes
 #define OPC_EVLRN	0xd2	// Teach event
@@ -391,15 +402,15 @@ extern "C" {
 #define OPC_ARSON2	0xDD	// Short response event on with two data bytes
 #define OPC_ARSOF2	0xDE	// Short response event off with two data bytes
 #define OPC_EXTC5	0xDF	// Extended opcode with 5 data bytes
-// 
+//
 // Packets with 7 data bytes
-// 
+//
 #define OPC_RDCC6	0xE0	// 6 byte DCC packets
 #define OPC_PLOC	0xE1	// Loco session report
 #define OPC_NAME	0xE2	// Module name response
 #define OPC_STAT	0xE3	// Command station status report
 #define OPC_PARAMS	0xEF	// Node parameters response
-// 
+//
 #define OPC_ACON3	0xF0	// On event with 3 data bytes
 #define OPC_ACOF3	0xF1	// Off event with 3 data bytes
 #define OPC_ENRSP	0xF2	// Read node events response
@@ -416,23 +427,23 @@ extern "C" {
 #define OPC_ARSON3	0xFD	// Short response event on with 3 data bytes
 #define OPC_ARSOF3	0xFE	// Short response event off with 3 data bytes
 #define OPC_EXTC6	0xFF	// Extended opcode with 6 data byes
-// 
+//
 // Opcodes that are proposed and/or agreed but not yet in the current published specification
-// 
+//
 #define OPC_VCVS	0xA4	// Verify CV service mode - used for CV read hints
 #define OPC_DTXC	0xE9	// CBUS long message packet
-// 
-// 
+//
+//
 // Modes for STMOD
-// 
+//
 #define TMOD_SPD_MASK	3	// 
 #define TMOD_SPD_128	0	// 
 #define TMOD_SPD_14	1	// 
 #define TMOD_SPD_28I	2	// 
 #define TMOD_SPD_28	3	// 
-// 
+//
 // Error codes for OPC_ERR
-// 
+//
 #define ERR_LOCO_STACK_FULL	1	// 
 #define ERR_LOCO_ADDR_TAKEN	2	// 
 #define ERR_SESSION_NOT_PRESENT	3	// 
@@ -441,17 +452,17 @@ extern "C" {
 #define ERR_CMD_RX_BUF_OFLOW	6	// 
 #define ERR_INVALID_REQUEST	7	// 
 #define ERR_SESSION_CANCELLED	8	// 
-// 
+//
 // Status codes for OPC_SSTAT
-// 
+//
 #define SSTAT_NO_ACK	1	// 
 #define SSTAT_OVLD	2	// 
 #define SSTAT_WR_ACK	3	// 
 #define SSTAT_BUSY	4	// 
 #define SSTAT_CV_ERROR	5	// 
-// 
+//
 // Error codes for OPC_CMDERR
-// 
+//
 #define CMDERR_INV_CMD	1	// 
 #define CMDERR_NOT_LRN	2	// 
 #define CMDERR_NOT_SETUP	3	// 
@@ -464,41 +475,41 @@ extern "C" {
 #define CMDERR_INV_NV_IDX	10	// 
 #define CMDERR_INV_EV_VALUE	11	// 
 #define CMDERR_INV_NV_VALUE	12	// 
-// 
+//
 // Additional error codes proposed and/or agreed but not yet in the current published specification
-// 
+//
 #define CMDERR_LRN_OTHER	13	// Sent when module in learn mode sees NNLRN for different module (also exits learn mode) 
-// 
-// 
+//
+//
 // Sub opcodes for OPC_CABDAT
-// 
+//
 #define CDAT_CABSIG	1	// 
-// 
+//
 // Aspect codes for CDAT_CABSIG
-// 
+//
 // First aspect byte
-// 
+//
 #define SASP_DANGER	0	// 
 #define SASP_CAUTION	1	// 
 #define SASP_PRELIM_CAUTION	2	// 
 #define SASP_PROCEED	3	// 
 #define SASP_CALLON	4	// Set bit 2 for call-on - main aspect will usually be at danger
 #define SASP_THEATRE	8	// Set bit 3 to 0 for upper nibble is feather lcoation, set 1 for upper nibble is theatre code
-// 
+//
 // Aspect codes for CDAT_CABSIG
-// 
+//
 // Second Aspect byte
-// 
+//
 #define SASP_LIT	0	// Set bit 0 to indicate lit
 #define SASP_LUNAR	1	// Set bit 1 for lunar indication
-// 
+//
 // Remaining bits in second aspect byte yet to be defined - can be used for other signalling systems
-// 
-// 
+//
+//
 // Parameter index numbers (readable by OPC_RQNPN, returned in OPC_PARAN)
 // Index numbers count from 1, subtract 1 for offset into parameter block
 // Note that RQNPN with index 0 returns the parameter count
-// 
+//
 #define PAR_MANU	1	// Manufacturer id
 #define PAR_MINVER	2	// Minor version letter
 #define PAR_MTYP	3	// Module type code
@@ -513,17 +524,17 @@ extern "C" {
 #define PAR_CPUMID	15	// CPU manufacturer's id as read from the chip config space, 4 bytes (note - read from cpu at runtime, so not included in checksum)
 #define PAR_CPUMAN	19	// CPU manufacturer code
 #define PAR_BETA	20	// Beta revision (numeric), or 0 if release
-// 
+//
 // Offsets to other values stored at the top of the parameter block.
 // These are not returned by opcode PARAN, but are present in the hex
 // file for FCU.
-// 
+//
 #define PAR_COUNT	0x18	// Number of parameters implemented
 #define PAR_NAME	0x1A	// 4 byte Address of Module type name, up to 8 characters null terminated
 #define PAR_CKSUM	0x1E	// Checksum word at end of parameters
-// 
+//
 // Flags in PAR_FLAGS
-// 
+//
 #define PF_NOEVENTS	0	// Module doesn't support events
 #define PF_CONSUMER	1	// Module is a consumer of events
 #define PF_PRODUCER	2	// Module is a producer of events
@@ -532,22 +543,23 @@ extern "C" {
 #define PF_BOOT	8	// Module supports the FCU bootloader protocol
 #define PF_COE	16	// Module can consume its own events
 #define PF_LRN	32	// Module is in learn mode
-// 
+#define PF_VLCB	64	// Module is VLCB compatible
+//
 // BUS type that module is connected to
-// 
+//
 #define PB_CAN	1	// 
 #define PB_ETH	2	// 
 #define PB_MIWI	3	// 
 #define PB_USB	4	// 
-// 
+//
 // Processor manufacturer codes
-// 
+//
 #define CPUM_MICROCHIP	1	// 
 #define CPUM_ATMEL	2	// 
 #define CPUM_ARM	3	// 
-// 
+//
 // Microchip Processor type codes (identifies to FCU for bootload compatibility)
-// 
+//
 #define P18F2480	1	// 
 #define P18F4480	2	// 
 #define P18F2580	3	// 
@@ -560,7 +572,7 @@ extern "C" {
 #define P18F4682	10	// 
 #define P18F2685	11	// 
 #define P18F4685	12	// 
-// 
+//
 #define P18F25K80	13	// 
 #define P18F45K80	14	// 
 #define P18F26K80	15	// 
@@ -573,7 +585,7 @@ extern "C" {
 #define P18F47Q84	22	// 
 #define P18F27Q83	23	// 
 #define P18F14K22	25	// 
-// 
+//
 #define P32MX534F064	30	// 
 #define P32MX564F064	31	// 
 #define P32MX564F128	32	// 
@@ -583,9 +595,9 @@ extern "C" {
 #define P32MX775F256	36	// 
 #define P32MX775F512	37	// 
 #define P32MX795F512	38	// 
-// 
+//
 // ARM Processor type codes (identifies to FCU for bootload compatibility)
-// 
+//
 #define ARM1176JZF_S	1	// As used in Raspberry Pi
 #define ARMCortex_A7	2	// As Used in Raspberry Pi 2
 #define ARMCortex_A53	3	// As used in Raspberry Pi 3

@@ -203,6 +203,7 @@ void CBUSbase::CANenumeration(void) {
 
   // send zero-length RTR frame
   _msg.len = 0;
+  _msg.rtr = true;
   sendMessage(&_msg, true, false);          // fixed arg order in v 1.1.4, RTR - true, ext = false
 
   // DEBUG_SERIAL << F("> enumeration cycle initiated") << endl;
@@ -265,7 +266,7 @@ void CBUSbase::renegotiate(void) {
 /// assign the two CBUS LED objects
 //
 
-void CBUSbase::setLEDs(CBUSLED green, CBUSLED yellow) {
+void CBUSbase::setLEDs(CBUSLED & green, CBUSLED & yellow) {
 
   UI = true;
   _ledGrn = green;
@@ -278,7 +279,7 @@ void CBUSbase::setLEDs(CBUSLED green, CBUSLED yellow) {
 /// assign the CBUS pushbutton switch object
 //
 
-void CBUSbase::setSwitch(CBUSSwitch sw) {
+void CBUSbase::setSwitch(CBUSSwitch & sw) {
 
   UI = true;
   _sw = sw;
@@ -367,13 +368,17 @@ void CBUSbase::process(byte num_messages) {
           }
         }
 
-        // short 1-2 secs
-        if (press_time >= 1000 && press_time < 2000) {
-          renegotiate();
+
+        if (press_time >= 1000 && press_time < 2000) {                       // short 1-2 secs
+          if (module_config->FLiM && !bModeChanging) {                       // if FLiM and not already renegotiating
+            renegotiate();                                                   // renegotiate NN
+          } else {
+            indicateMode(module_config->FLiM);                               // cancel negotiation
+            bModeChanging = false;
+          }
         }
 
-        // very short < 0.5 sec
-        if (press_time < 500 && module_config->FLiM) {
+        if (press_time < 500 && press_time > 50 && module_config->FLiM) {    // very short < 0.5 sec in FLiM
           CANenumeration();
         }
 
@@ -384,18 +389,19 @@ void CBUSbase::process(byte num_messages) {
   }
 
   // get received CAN frames from buffer
-  // process by default 3 messages per run so the user's application code doesn't appear unresponsive under load
+  // drain down the input buffer
+  // process up to 3 messages per run so the user's application code doesn't appear unresponsive under load
 
   byte mcount = 0;
 
-  while ((available() || (coe_obj != NULL && coe_obj->available())) && mcount < num_messages) {
+  while ((available() || (coe_obj != nullptr && coe_obj->available())) && mcount < num_messages) {
 
     ++mcount;
 
     // at least one CAN frame is available in either the reception buffer or the COE buffer
     // retrieve the next one
 
-    if (coe_obj != NULL && coe_obj->available()) {
+    if (coe_obj != nullptr && coe_obj->available()) {
       _msg = coe_obj->get();
     } else {
       _msg = getNextMessage();
@@ -405,7 +411,7 @@ void CBUSbase::process(byte num_messages) {
     /// if registered, call the user handler with this new frame
     //
 
-    if (framehandler != NULL) {
+    if (framehandler != nullptr) {
 
       // check if incoming opcode is in the user list, if list length > 0
       if (_num_opcodes > 0) {
@@ -445,21 +451,14 @@ void CBUSbase::process(byte num_messages) {
   //
 }
 
+//
+/// process a single CBUS messages
+//
+
 void CBUSbase::process_single_message(CANFrame *msg) {
 
-  byte remoteCANID, evindex = 0, evval = 0, opc;
-  unsigned int nn, en;
-
-  // extract OPC, NN, EN
-  opc = msg->data[0];
-  nn = (msg->data[1] << 8) + msg->data[2];
-  en = (msg->data[3] << 8) + msg->data[4];
-
-  //
-  /// extract the CANID of the sending module
-  //
-
-  remoteCANID = getCANID(msg->id);
+  byte remoteCANID, evindex, evval, opc;
+  uint16_t nn, en;
 
   //
   /// pulse the green LED
@@ -467,6 +466,12 @@ void CBUSbase::process_single_message(CANFrame *msg) {
 
   if (UI) {
     _ledGrn.pulse();
+  }
+
+  // is this an extended frame ? we currently ignore these as bootloader, etc data may confuse us !
+
+  if (msg->ext) {
+    return;
   }
 
   //
@@ -481,21 +486,18 @@ void CBUSbase::process_single_message(CANFrame *msg) {
     return;
   }
 
+  // extract the CANID of the sending module
+
+  remoteCANID = getCANID(msg->id);
+
+  // extract the node number
+
+  nn = (msg->data[1] << 8) + msg->data[2];
+
   //
   /// set flag if we find a CANID conflict with the frame's producer
   /// doesn't apply to RTR or zero-length frames, so as not to trigger an enumeration loop
   //
-
-  if (msg->len > 0 && remoteCANID == module_config->CANID && nn != module_config->nodeNum) {
-    // DEBUG_SERIAL << F("> CAN id clash, enumeration required") << endl;
-    enumeration_required = true;
-  }
-
-  // is this an extended frame ? we currently ignore these as bootloader, etc data may confuse us !
-  if (msg->ext) {
-    // DEBUG_SERIAL << F("> extended frame ignored, from CANID = ") << remoteCANID << endl;
-    return;
-  }
 
   // are we enumerating CANIDs ?
   if (bCANenum && msg->len == 0) {
@@ -510,6 +512,11 @@ void CBUSbase::process_single_message(CANFrame *msg) {
     return;
   }
 
+  if (msg->len > 0 && remoteCANID == module_config->CANID && nn != module_config->nodeNum && !bCANenum) {
+    // DEBUG_SERIAL << F("> CAN id clash, enumeration required") << endl;
+    enumeration_required = true;
+  }
+
   //
   /// process the message opcode
   /// if we got this far, it's a standard CAN frame (not extended, not RTR) with a data payload length > 0
@@ -518,6 +525,10 @@ void CBUSbase::process_single_message(CANFrame *msg) {
   if (msg->len > 0) {
 
     byte index;
+
+    // extract opcode and event/device number
+    opc = msg->data[0];
+    en = (msg->data[3] << 8) + msg->data[4];
 
     switch (opc) {
 
@@ -1027,7 +1038,7 @@ void CBUSbase::process_single_message(CANFrame *msg) {
 
     case OPC_DTXC:
       // CBUS long message
-      if (longMessageHandler != NULL) {
+      if (longMessageHandler != nullptr) {
         longMessageHandler->processReceivedMessageFragment(msg);
       }
       break;
@@ -1100,11 +1111,14 @@ check_done:
     module_config->setCANID(selected_id);
 
     // send NNACK
-    // _msg.len = 3;
-    // _msg.data[0] = OPC_NNACK;
-    // _msg.data[1] = highByte(module_config->nodeNum);
-    // _msg.data[2] = lowByte(module_config->nodeNum);
-    // sendMessage(&_msg);
+    // JMRI will not pick up a new CANID unless the module transmits a message. NNACK is safe
+    // MMC ignores this
+
+    _msg.len = 3;
+    _msg.data[0] = OPC_NNACK;
+    _msg.data[1] = highByte(module_config->nodeNum);
+    _msg.data[2] = lowByte(module_config->nodeNum);
+    sendMessage(&_msg);
   }
 }
 
@@ -1120,9 +1134,9 @@ void CBUSbase::processAccessoryEvent(unsigned int nn, unsigned int en, bool is_o
   // call any registered event handler
 
   if (index < module_config->EE_MAX_EVENTS) {
-    if (eventhandler != NULL) {
+    if (eventhandler != nullptr) {
       (void)(*eventhandler)(index, &_msg);
-    } else if (eventhandlerex != NULL) {
+    } else if (eventhandlerex != nullptr) {
       (void)(*eventhandlerex)(index, &_msg, is_on_event, \
                               ((module_config->EE_NUM_EVS > 0) ? module_config->getEventEVval(index, 1) : 0) \
                              );
@@ -1230,7 +1244,7 @@ bool circular_buffer2::available(void) {
 /// store an item to the buffer - overwrite oldest item if buffer is full
 /// never called from an interrupt context so we don't need to worry about interrupts
 
-void circular_buffer2::put(const CANFrame * item) {
+void circular_buffer2::put(const CANFrame *item) {
 
   memcpy((CANFrame*)&_buffer[_head]._item, (const CANFrame *)item, sizeof(CANFrame));
   _buffer[_head]._item_insert_time = micros();

@@ -135,8 +135,8 @@ public:
   void revertSLiM(void);
   void setSLiM(void);
   void renegotiate(void);
-  void setLEDs(CBUSLED ledGrn, CBUSLED ledYlw);
-  void setSwitch(CBUSSwitch sw);
+  void setLEDs(CBUSLED & ledGrn, CBUSLED & ledYlw);
+  void setSwitch(CBUSSwitch & sw);
   void setParams(unsigned char *mparams);
   void setName(unsigned char *mname);
   void checkCANenum(void);
@@ -166,7 +166,7 @@ protected:                                          // protected members become 
   void (*transmithandler)(CANFrame *msg);
   byte *_opcodes;
   byte _num_opcodes;
-  byte enum_responses[16];                          // 128 bits for storing CAN ID enumeration results
+  byte enum_responses[16];                          // 128 bits for storing CAN enumeration results
   bool bModeChanging, bCANenum, bLearn;
   unsigned long timeOutTimer, CANenumTime;
   bool enumeration_required;
